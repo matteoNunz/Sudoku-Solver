@@ -197,14 +197,9 @@ class SudokuHandler:
             # Notify the whole sub-square that it is invalid in the mask corresponding the number inserted
             # Take the coordinate of the first cell in high-left of the sub-matrix
             x2 , y2 = self.takeSquare(x , y)
-            if numberInserted == 1:
-                print("x and y are : " + str(x) + "," + str(y))
-                print("The first element of the sub square is : " + str(x2) + "," + str(y2))
 
             for iRow in range(x2 , x2 + 3): # from x2 to x2 + 2 (x2 + 3 is excluded)
                 for iCol in range(y2 , y2 + 3):
-                    if numberInserted == 1:
-                        print("Checking position " + str(iRow) + "," + str(iCol) + " of the sub-matrix")
                     if (self.grid[numberInserted - 1])[iRow][iCol] != State.OCCUPIED:
                         (self.grid[numberInserted - 1])[iRow][iCol] = State.INVALID
 
@@ -233,6 +228,77 @@ class SudokuHandler:
 
         return x2 , y2
 
+    def insertANumber(self):
+        """
+        This method will perform the insertion of a new number
+            It will search for the right place where put the number
+        :return: True if the algorithm inserted a number, False if it couldn't
+        """
+
+        # Check all the masks in self.grid
+        for m in range(1 , self.size + 1):
+            # Check the row
+            for i in range(0 , self.size):
+                validPosition = 0
+                for j in range(0 , self.size):
+                    if (self.grid[m - 1])[i][j] == State.VALID or (self.grid[m - 1])[i][j] == State.UNKNOWN:
+                        validPosition += 1
+                # If there is just one position valid/unknown -> insert the m number in that position
+                if validPosition == 1:
+                    for j in range(0, self.size):
+                        if (self.grid[m - 1])[i][j] == State.VALID or (self.grid[m - 1])[i][j] == State.UNKNOWN:
+                            y = j
+                    # Add the number in the main matrix
+                    print("R: inserted " + str(m) + " in position " + str(i) + "," + str(y))
+                    self.matrix[i][y] = str(m)
+                    # Update the grid
+                    self.updateGrid(i , y)
+                    return True
+
+            # Check the column
+            for i in range(0 , self.size):
+                validPosition = 0
+                for j in range(0 , self.size):
+                    if (self.grid[m - 1])[j][i] == State.VALID or (self.grid[m - 1])[j][i] == State.UNKNOWN:
+                        validPosition += 1
+                # If there is just one position valid/unknown -> insert the m number in that position
+                if validPosition == 1:
+                    for j in range(0, self.size):
+                        if (self.grid[m - 1])[j][i] == State.VALID or (self.grid[m - 1])[j][i] == State.UNKNOWN:
+                            x = j
+                    # Add the number in the main matrix
+                    print("C: inserted " + str(m) + " in position " + str(x) + "," + str(i))
+                    self.matrix[x][i] = str(m)
+                    # Update the grid
+                    self.updateGrid(x , i)
+                    return True
+
+            # Check the sub-matrices -> (i , j) is the first cell of the current sub-matrix
+            for i in range(0 , self.size , 3):
+                for j in range(0, self.size, 3):
+                    validPosition = 0
+                    for i2 in range(0 , 3):
+                        for j2 in range(0 , 3):
+                            if (self.grid[m - 1])[i + i2][j + j2] == State.VALID or \
+                                    (self.grid[m - 1])[i + i2][j + j2] == State.UNKNOWN:
+                                validPosition += 1
+                    # If there is just one position valid/unknown -> insert the m number in that position
+                    if validPosition == 1:
+                        for i2 in range(0, 3):
+                            for j2 in range(0, 3):
+                                if (self.grid[m - 1])[i + i2][j + j2] == State.VALID or \
+                                        (self.grid[m - 1])[i + i2][j + j2] == State.UNKNOWN:
+                                    x = i + i2
+                                    y = j + j2
+                        print("S: inserted " + str(m) + " in position " + str(x) + "," + str(y))
+                        self.matrix[x][y] = str(m)
+                        # Update the grid
+                        self.updateGrid(x , y)
+                        return True
+
+        # If nothing has been added
+        return False
+
     def process(self):
         """
         This is the main function that handler the algorithm
@@ -244,11 +310,19 @@ class SudokuHandler:
         # print("Length of a mask is: " + str(len(self.grid[0])))
         # print("Depth of a mask is: " + str(len(self.grid[0][0])))
         self.updateGrid()
+        self.printMatrix()
+        self.printGrid()
 
         while not self.isCompleted():
+            # Insert a number
+            result = self.insertANumber()
+            if not result:
+                print("It's not possible to find a solution")
+                return
+            # Show the new matrices
             self.printMatrix()
-            self.printGrid()
-            return
+            # self.printGrid()
+        print("The computation ended correctly")
 
 
 if __name__ == "__main__":
