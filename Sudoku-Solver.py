@@ -81,28 +81,34 @@ class SudokuHandler:
                             mask[i][j] = State.OCCUPIED
                         k += 1
 
-    def isPresentInArray(self , numberToFind , array):
+    def isPresentInArray(self , numberToFind , index , row = True):
         """
         Method used to search if a number is present in an array
+        :param row: indicates if the index is referring to a row or to a column
+        :param index: is the index of the row/column
         :param numberToFind: is the number to find
-        :param array: is the row/column of the matrix according to the situation
         :return: True if the number is present, False otherwise
         """
-        for elem in array:
-            if numberToFind == elem:
-                return True
+        for i in range(0 , self.size):
+            if row:
+                if self.matrix[index][i] == str(numberToFind):
+                    return True
+            else:
+                if self.matrix[i][index] == str(numberToFind):
+                    return True
         return False
 
-    def isPresentInSquare(self , numberToFind , mtr):
+    def isPresentInSquare(self , numberToFind , x , y):
         """
         Method used to search if a number is present in a sub-matrix (3x3)
         :param numberToFind: is the number to find
-        :param mtr: is the sub-matrix
+        :param x: is the coordinate x of the first cell in the sub-matrix
+        :param y: is the coordinate y of the first cell in the sub-matrix
         :return: True if the number is present, False otherwise
         """
-        for row in mtr:
-            for i in range(0 , len(mtr)):
-                if row[i] == numberToFind:
+        for i in range(x , x + 3):
+            for j in range(y , y + 3):
+                if self.matrix[i][j] == str(numberToFind):
                     return True
         return False
 
@@ -137,9 +143,9 @@ class SudokuHandler:
         # Verify if in every row/column is present every number between 0 and self.size
         for i in range(0 , self.size):
             for number in range(0 , self.size):
-                if not self.isPresentInArray(number , self.matrix[i]):
+                if not self.isPresentInArray(number , i):
                     return False
-                if not self.isPresentInArray(number , self.matrix[:][i]):
+                if not self.isPresentInArray(number , i , False):
                     return False
 
         # Verify if in every sub-matrix is present every number between 0 and self.size
@@ -173,7 +179,7 @@ class SudokuHandler:
 
         # If a number is been inserted
         if x is not None and y is not None:
-            numberInserted = int(self.matrix[x][y])  # The index for the grid
+            numberInserted = int(self.matrix[x][y]) - 1  # The index for the grid
 
             k = 0
             # Notify every mask about the new number
@@ -187,12 +193,12 @@ class SudokuHandler:
             # Notify the row/column that they are invalid in the mask corresponding the number inserted
             for i in range(0 , self.size):
                 if i != numberInserted:
-                    if (self.grid[numberInserted - 1])[x][i] != State.OCCUPIED:
-                        (self.grid[numberInserted - 1])[x][i] = State.INVALID
-                    if (self.grid[numberInserted - 1])[i][y] != State.OCCUPIED:
-                        (self.grid[numberInserted - 1])[i][y] = State.INVALID
+                    if (self.grid[numberInserted])[x][i] != State.OCCUPIED:
+                        (self.grid[numberInserted])[x][i] = State.INVALID
+                    if (self.grid[numberInserted])[i][y] != State.OCCUPIED:
+                        (self.grid[numberInserted])[i][y] = State.INVALID
                 else:
-                    self.grid[numberInserted - 1][x][i] = State.SET
+                    self.grid[numberInserted][x][i] = State.SET
 
             # Notify the whole sub-square that it is invalid in the mask corresponding the number inserted
             # Take the coordinate of the first cell in high-left of the sub-matrix
@@ -200,8 +206,8 @@ class SudokuHandler:
 
             for iRow in range(x2 , x2 + 3): # from x2 to x2 + 2 (x2 + 3 is excluded)
                 for iCol in range(y2 , y2 + 3):
-                    if (self.grid[numberInserted - 1])[iRow][iCol] != State.OCCUPIED:
-                        (self.grid[numberInserted - 1])[iRow][iCol] = State.INVALID
+                    if (self.grid[numberInserted])[iRow][iCol] != State.OCCUPIED:
+                        (self.grid[numberInserted])[iRow][iCol] = State.INVALID
 
     def takeSquare(self , x , y):
         """
@@ -241,7 +247,8 @@ class SudokuHandler:
             for i in range(0 , self.size):
                 validPosition = 0
                 for j in range(0 , self.size):
-                    if (self.grid[m - 1])[i][j] == State.VALID or (self.grid[m - 1])[i][j] == State.UNKNOWN:
+                    if ((self.grid[m - 1])[i][j] == State.VALID or (self.grid[m - 1])[i][j] == State.UNKNOWN)\
+                            and not self.isPresentInArray(m , i):
                         validPosition += 1
                 # If there is just one position valid/unknown -> insert the m number in that position
                 if validPosition == 1:
@@ -259,7 +266,8 @@ class SudokuHandler:
             for i in range(0 , self.size):
                 validPosition = 0
                 for j in range(0 , self.size):
-                    if (self.grid[m - 1])[j][i] == State.VALID or (self.grid[m - 1])[j][i] == State.UNKNOWN:
+                    if ((self.grid[m - 1])[j][i] == State.VALID or (self.grid[m - 1])[j][i] == State.UNKNOWN) \
+                            and not self.isPresentInArray(m , i , False):
                         validPosition += 1
                 # If there is just one position valid/unknown -> insert the m number in that position
                 if validPosition == 1:
@@ -279,8 +287,9 @@ class SudokuHandler:
                     validPosition = 0
                     for i2 in range(0 , 3):
                         for j2 in range(0 , 3):
-                            if (self.grid[m - 1])[i + i2][j + j2] == State.VALID or \
-                                    (self.grid[m - 1])[i + i2][j + j2] == State.UNKNOWN:
+                            if ((self.grid[m - 1])[i + i2][j + j2] == State.VALID or \
+                                    (self.grid[m - 1])[i + i2][j + j2] == State.UNKNOWN)\
+                                    and not self.isPresentInSquare(m , i , j):
                                 validPosition += 1
                     # If there is just one position valid/unknown -> insert the m number in that position
                     if validPosition == 1:
