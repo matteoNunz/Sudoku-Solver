@@ -4,12 +4,11 @@ Author: Matteo Nunziante
 First version of a sudoku solver
 """
 
-import enum
-
+from enum import Enum
 SIZE = 9
 
 
-class State(enum):
+class State(Enum):
     """
     Create an enumerate list for the possible situation in a cell of the sudoku
         VALID   -> the number can be inserted
@@ -17,37 +16,35 @@ class State(enum):
         UNKNOWN -> it's not known if the number can or cannot be put in the cell
         SET     -> the number is been inserted
         OCCUPIED-> to indicate in a cell there is an other number
-        DEFAULT -> the number is pre-defined by the game (inserted byt the user)
+        DEFAULT -> the number is pre-defined by the game (inserted byt the user) (for the moment it isn't used)
     """
     VALID = 0
     INVALID = 1
     UNKNOWN = 2
-    SET = 4
-    OCCUPIED = 5
-    DEFAULT = 6
+    SET = 3
+    OCCUPIED = 4
+    DEFAULT = 5
 
 
 class SudokuHandler:
     def __init__(self):
         self.size = SIZE  # 9x9 sudoku
         self.matrix = []  # This matrix will contain the numbers
-        # Initialize the matrix
-        self.matrix = self.initMask()
         self.grid = []    # This is a set of matrix (one for each number) of value in State
         # Initialize the grid of matrices (one for each number)
-        for _ in self.size:
-            self.grid.append(self.initMatrix())
+        for _ in range(0 , self.size):
+            self.grid.append(self.initMask())
 
-    def initMatrix(self):
+    def initMask(self):
         """
         Method that initialize the generic matrix board to all UNKNOWN values
         :return: the new matrix initialized
         """
         # Initialize the matrix
         matrix = []
-        for i in range(0 , self.size - 1):
+        for i in range(0 , self.size):
             row = []
-            for j in range(0 , self.size - 1):
+            for j in range(0 , self.size):
                 # Set the unknown state in every cell
                 row.append(State.UNKNOWN)
             matrix.append(row)
@@ -62,11 +59,12 @@ class SudokuHandler:
         # Read from the input
         for i in range(0 , self.size):
             row = input().split(" ")
+            self.matrix.append(row)
             for j in range(0 , self.size):
-                self.matrix[i][j] = row[j]
+                # self.matrix[i][j] = row[j]
 
                 # If the user inserted a value
-                if self.matrix[i][j] != " ":
+                if self.matrix[i][j] != "_":
                     # Save the integer
                     numberInserted = int(self.matrix[i][j])
 
@@ -77,7 +75,8 @@ class SudokuHandler:
                     """
                     for mask in self.grid:
                         if k == numberInserted:
-                            mask[i][j] = State.DEFAULT
+                            # mask[i][j] = State.DEFAULT
+                            mask[i][j] = State.SET
                         else:
                             mask[i][j] = State.OCCUPIED
                         k += 1
@@ -116,6 +115,19 @@ class SudokuHandler:
                 print(cell , end = " ")
             print("")
 
+    def printGrid(self):
+        """
+        Method that print the mask matrices
+        """
+        number = 1
+        for mask in self.grid:
+            print("Mask of number " + str(number))
+            for i in range(0 , self.size):
+                for j in range(0 , self.size):
+                    print(mask[i][j] , end = " ")
+                print("")
+            number += 1
+
     def isCompleted(self):
         """
         Method that checks if the matrix is full and completely
@@ -150,6 +162,15 @@ class SudokuHandler:
         :param y: is the coordinate y of the new number
         """
 
+        # If it's the first call
+        if x is None and y is None:
+            # Need to update the grid of every mask looking for every default number
+            for i in range(0 , self.size):
+                for j in range(0 , self.size):
+                    if self.matrix[i][j] != "_":
+                        # Call this function for the specific cell
+                        self.updateGrid(i , j)
+
         # If a number is been inserted
         if x is not None and y is not None:
             numberInserted = int(self.matrix[x][y])  # The index for the grid
@@ -161,22 +182,31 @@ class SudokuHandler:
                     mask[x][y] = State.OCCUPIED
                 k += 1
 
+            # print("x is:" + str(x))
+            # print("y is:" + str(y))
             # Notify the row/column that they are invalid in the mask corresponding the number inserted
             for i in range(0 , self.size):
                 if i != numberInserted:
-                    self.grid[numberInserted][x][i] = State.INVALID
-                    self.grid[numberInserted][i][y] = State.INVALID
+                    if (self.grid[numberInserted - 1])[x][i] != State.OCCUPIED:
+                        (self.grid[numberInserted - 1])[x][i] = State.INVALID
+                    if (self.grid[numberInserted - 1])[i][y] != State.OCCUPIED:
+                        (self.grid[numberInserted - 1])[i][y] = State.INVALID
                 else:
-                    self.grid[numberInserted][x][i] = State.SET
+                    self.grid[numberInserted - 1][x][i] = State.SET
 
             # Notify the whole sub-square that it is invalid in the mask corresponding the number inserted
             # Take the coordinate of the first cell in high-left of the sub-matrix
             x2 , y2 = self.takeSquare(x , y)
+            if numberInserted == 1:
+                print("x and y are : " + str(x) + "," + str(y))
+                print("The first element of the sub square is : " + str(x2) + "," + str(y2))
 
-            for iRow in range(x2 , x2 + 2):     #  self.grid[numberInserted][x2 : x2 + 2][y2 : y2 + 2]:
-                for iCol in range(y2 , y2 + 2):
-                    if self.grid[numberInserted][iRow][iCol] != State.OCCUPIED:
-                        self.grid[numberInserted][iRow][iCol] = State.INVALID
+            for iRow in range(x2 , x2 + 3): # from x2 to x2 + 2 (x2 + 3 is excluded)
+                for iCol in range(y2 , y2 + 3):
+                    if numberInserted == 1:
+                        print("Checking position " + str(iRow) + "," + str(iCol) + " of the sub-matrix")
+                    if (self.grid[numberInserted - 1])[iRow][iCol] != State.OCCUPIED:
+                        (self.grid[numberInserted - 1])[iRow][iCol] = State.INVALID
 
     def takeSquare(self , x , y):
         """
@@ -199,7 +229,7 @@ class SudokuHandler:
         elif y < 6:
             y2 = 3
         else:
-            y = 6
+            y2 = 6
 
         return x2 , y2
 
@@ -209,9 +239,16 @@ class SudokuHandler:
         """
         # Read the game
         self.readMatrix()
+        # Update the masks
+        # print("Length of the grid is: " + str(len(self.grid)))
+        # print("Length of a mask is: " + str(len(self.grid[0])))
+        # print("Depth of a mask is: " + str(len(self.grid[0][0])))
+        self.updateGrid()
 
         while not self.isCompleted():
             self.printMatrix()
+            self.printGrid()
+            return
 
 
 if __name__ == "__main__":
