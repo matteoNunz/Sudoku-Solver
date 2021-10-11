@@ -186,19 +186,21 @@ class SudokuHandler:
             for mask in self.grid:
                 if k != numberInserted:
                     mask[x][y] = State.OCCUPIED
+                else:
+                    mask[x][y] = State.SET
                 k += 1
 
             # print("x is:" + str(x))
             # print("y is:" + str(y))
             # Notify the row/column that they are invalid in the mask corresponding the number inserted
             for i in range(0 , self.size):
-                if i != numberInserted:
-                    if (self.grid[numberInserted])[x][i] != State.OCCUPIED:
-                        (self.grid[numberInserted])[x][i] = State.INVALID
-                    if (self.grid[numberInserted])[i][y] != State.OCCUPIED:
-                        (self.grid[numberInserted])[i][y] = State.INVALID
-                else:
-                    self.grid[numberInserted][x][i] = State.SET
+                # if i != numberInserted:
+                if (self.grid[numberInserted])[x][i] != State.OCCUPIED and \
+                        (self.grid[numberInserted])[x][i] != State.SET:
+                    (self.grid[numberInserted])[x][i] = State.INVALID
+                if (self.grid[numberInserted])[i][y] != State.OCCUPIED and \
+                        (self.grid[numberInserted])[i][y] != State.SET:
+                    (self.grid[numberInserted])[i][y] = State.INVALID
 
             # Notify the whole sub-square that it is invalid in the mask corresponding the number inserted
             # Take the coordinate of the first cell in high-left of the sub-matrix
@@ -206,7 +208,8 @@ class SudokuHandler:
 
             for iRow in range(x2 , x2 + 3): # from x2 to x2 + 2 (x2 + 3 is excluded)
                 for iCol in range(y2 , y2 + 3):
-                    if (self.grid[numberInserted])[iRow][iCol] != State.OCCUPIED:
+                    if (self.grid[numberInserted])[iRow][iCol] != State.OCCUPIED and \
+                            (self.grid[numberInserted])[iRow][iCol] != State.SET:
                         (self.grid[numberInserted])[iRow][iCol] = State.INVALID
 
     def takeSquare(self , x , y):
@@ -327,6 +330,7 @@ class SudokuHandler:
             result = self.insertANumber()
             if not result:
                 print("It's not possible to find a solution")
+                print(self.printGrid())
                 return
             # Show the new matrices
             self.printMatrix()
