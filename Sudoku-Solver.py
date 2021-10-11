@@ -142,7 +142,7 @@ class SudokuHandler:
 
         # Verify if in every row/column is present every number between 0 and self.size
         for i in range(0 , self.size):
-            for number in range(0 , self.size):
+            for number in range(1 , self.size + 1):
                 if not self.isPresentInArray(number , i):
                     return False
                 if not self.isPresentInArray(number , i , False):
@@ -152,10 +152,10 @@ class SudokuHandler:
         subSpaces = [0 , 3 , 6]  # Starting indexes of the sub-matrix
 
         # For every number number, check in every sub-matrix
-        for number in range(0 , self.size):
+        for number in range(1 , self.size + 1):
             for row in subSpaces:
                 for column in subSpaces:
-                    if not self.isPresentInSquare(number , self.matrix[row , row + 2][column , column + 2]):
+                    if not self.isPresentInSquare(number , row , column):
                         return False
 
         return True
@@ -323,14 +323,14 @@ class SudokuHandler:
         # print("Depth of a mask is: " + str(len(self.grid[0][0])))
         self.updateGrid()
         self.printMatrix()
-        self.printGrid()
+        # self.printGrid()
 
         while not self.isCompleted():
             # Insert a number
             result = self.insertANumber()
             if not result:
                 print("It's not possible to find a solution")
-                print(self.printGrid())
+                # print(self.printGrid())
                 return
             # Show the new matrices
             self.printMatrix()
