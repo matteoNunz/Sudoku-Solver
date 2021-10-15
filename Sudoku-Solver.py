@@ -323,7 +323,6 @@ class SudokuHandler:
         Method that find the number with more VALID state
         :return: return the number chose
         """
-        minValues = []
         minCount = self.size * self.size
         numberChose = 1
         for num in range(1 , self.size + 1):
@@ -332,11 +331,9 @@ class SudokuHandler:
                 for j in range(0 , self.size):
                     if self.grid[num - 1][i][j] == State.VALID:
                         numCount += 1
-            minValues.append(numCount)
             if 0 < numCount < minCount:
                 minCount = numCount
                 numberChose = num
-        print(minValues)
         return numberChose
 
     def getNumberToInsert(self):
